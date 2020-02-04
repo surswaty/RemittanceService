@@ -13,16 +13,17 @@ contract RemittanceService{
     
     function transferRemmittance(address _agent, string memory _secretSrting)public payable returns(bool){
         require(msg.value > 0);
-        bytes32 secretHash = keccak256(_secretSrting);
+        bytes32 secretHash = keccak256(abi.encodePacked(_secretSrting));
         RemittanceData memory myRem = RemittanceData(_agent, msg.value, secretHash);
         secretData[secretHash] = myRem;
         return true;
     }
     
     function agentWithdraw(string memory _secretSrting, uint _amount)public returns(bool){
-        bytes32 secretHash = keccak256(_secretSrting);
-       require(secretData[secretHash].agent == msg.sender, "Not the agent");
-       require(_amount <= secretData[secretHash].value, "Insufficient Balance");
+        bytes32 secretHash = keccak256(abi.encodePacked(_secretSrting));
+        require(_amount > 0);
+        require(secretData[secretHash].agent == msg.sender, "Not the agent");
+        require(_amount <= secretData[secretHash].value, "Insufficient Balance");
         emit AgentWithdrawDone(msg.sender, _amount);
         msg.sender.transfer(_amount);
         secretData[secretHash].value -= _amount;
