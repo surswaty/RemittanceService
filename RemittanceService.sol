@@ -4,26 +4,28 @@ contract RemittanceService{
     struct RemittanceData{
         address agent;
         uint value;
-        string secretNum;
+        bytes32 secretHash;
     }
-    mapping (string => RemittanceData) secretData;
+    mapping (bytes32 => RemittanceData) secretData;
    
     event RemittanceTransfered(address sender, uint amount, address agent);
     event AgentWithdrawDone(address agent, uint amount);
     
     function transferRemmittance(address _agent, string memory _secretSrting)public payable returns(bool){
         require(msg.value > 0);
-        RemittanceData memory myRem = RemittanceData(_agent, msg.value, _secretSrting);
-        secretData[_secretSrting] = myRem;
+        bytes32 secretHash = keccak256(_secretSrting);
+        RemittanceData memory myRem = RemittanceData(_agent, msg.value, secretHash);
+        secretData[secretHash] = myRem;
         return true;
     }
     
-    function agentWithdraw(string memory _secretNum, uint _amount)public returns(bool){
-       require(secretData[_secretNum].agent == msg.sender, "Not the agent");
-       require(_amount <= secretData[_secretNum].value, "Insufficient Balance");
+    function agentWithdraw(string memory _secretSrting, uint _amount)public returns(bool){
+        bytes32 secretHash = keccak256(_secretSrting);
+       require(secretData[secretHash].agent == msg.sender, "Not the agent");
+       require(_amount <= secretData[secretHash].value, "Insufficient Balance");
         emit AgentWithdrawDone(msg.sender, _amount);
         msg.sender.transfer(_amount);
-        secretData[_secretNum].value -= _amount;
+        secretData[secretHash].value -= _amount;
         return true;
     }
 }
