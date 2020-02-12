@@ -11,11 +11,14 @@ contract RemittanceService{
     event RemittanceTransfered(address sender, uint amount, address agent);
     event AgentWithdrawDone(address agent, uint amount);
     
-    function transferRemmittance(address _agent, string memory _secretSrting)public payable returns(bool){
+    function hashIt(string memory _string)public pure returns(bytes32){
+        return bytes32(keccak256(abi.encodePacked(_string)));
+    }
+    
+    function transferRemmittance(address _agent, bytes32 _hash) public payable returns(bool){
         require(msg.value > 0);
-        bytes32 secretHash = keccak256(abi.encodePacked(_secretSrting));
-        RemittanceData memory myRem = RemittanceData(_agent, msg.value, secretHash);
-        secretData[secretHash] = myRem;
+        RemittanceData memory myRem = RemittanceData(_agent, msg.value, _hash);
+        secretData[_hash] = myRem;
         return true;
     }
     
